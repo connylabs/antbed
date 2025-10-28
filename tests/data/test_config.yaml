@@ -1,0 +1,87 @@
+app:
+  env: test
+  prometheus_dir: /tmp/testprom
+logging:
+  level: info
+name: antbed-test
+antbed:
+  postgresql:
+    async_driver: asyncpg
+    db: pythonapp-dev
+    driver: psycopg2
+    host: localhost
+    params: {}
+    password: antbedex
+    port: 5433
+    user: antbedex
+
+sentry:
+  dsn: null
+  environment: null
+  release: null
+  traces_sample_rate: null
+
+
+
+server:
+  cors:
+    allow_credentials: false
+    allow_headers:
+    - '*'
+    allow_methods:
+    - '*'
+    allow_origin_regex: .*
+    allow_origins:
+    - http://localhost:8080
+    - http://localhost:8000
+    - http://localhost
+  host: 0.0.0.0
+  middlewares: []
+  middlewares_replace_default: null
+  port: 8080
+  reload: true
+  routers: []
+  routers_replace_default: null
+  server: antbed.server.server:serve
+  token: ''
+
+temporalio:
+  converter: temporalloop.converters.pydantic:pydantic_data_converter
+  default_factory: temporalloop.worker:WorkerFactory
+  disable_eager_activity_execution: true
+  host: localhost:7233
+  interceptors: []
+  max_concurrent_activities: 100
+  max_concurrent_workflow_tasks: 100
+  metric_bind_address: 0.0.0.0:9000
+  namespace: default
+  pre_init: []
+  workers:
+  - activities:
+    - antbed.temporal.activities:echo
+    converter: null
+    debug_mode: false
+    disable_eager_activity_execution: true
+    factory: null
+    interceptors: null
+    max_concurrent_activities: 100
+    max_concurrent_workflow_tasks: 100
+    metric_bind_address: ''
+    name: antbed-activities
+    pre_init: null
+    queue: antbed-queue-activity
+    workflows: []
+  - activities: []
+    converter: null
+    debug_mode: false
+    disable_eager_activity_execution: true
+    factory: null
+    interceptors: null
+    max_concurrent_activities: 100
+    max_concurrent_workflow_tasks: 100
+    metric_bind_address: ''
+    name: antbed-workflow
+    pre_init: null
+    queue: antbed-queue
+    workflows:
+    - antbed.temporal.workflows.echo:EchoWorkflow

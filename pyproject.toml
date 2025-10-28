@@ -1,0 +1,96 @@
+[project]
+name = "antbed"
+version = "0.1.0"
+description = ""
+authors = [{ name = "ant31", email = "2t.antoine@gmail.com" }]
+requires-python = ">=3.12,<4"
+readme = "README.md"
+dependencies = [
+    "pymongo",
+    "asyncio (>=3)",
+    "pydantic",
+    "click",
+    "pyyaml",
+    "paramiko",
+    "sentry-sdk[fastapi]",
+    "temporalloop @ git+https://github.com/ant31/temporal-loop@v2",
+    "typing-extensions",
+    "sqlalchemy",
+    "psycopg2",
+    "psycopg[c]",
+    "ant31box[all] @ git+https://github.com/ant31/ant31box@main",
+    "antgent @ git+https://github.com/ant31/antgent@main",
+    "activealchemy @ git+https://github.com/ant31/activealchemy@2fe515719b4d2064adf423cb96f766cb8b78625b",
+    "humanize",
+    "boto3",
+    "openai",
+    "requests",
+    "qdrant-client",
+    "langchain-community",
+    "langchain",
+    "langchain-qdrant",
+    "tiktoken",
+    "langchain-openai",
+    "langchain-text-splitters",
+    "google-genai",
+    "openai-agents",
+    "logfire[fastapi] (>=3.12.0,<4.0.0)",
+]
+packages = [{ include = "antbed" }]
+include = [
+    { path = "antbed/migrations" },
+    { path = "antbed/prompts" },
+]
+
+[dependency-groups]
+dev = [
+    "pyreadline",
+    "requests",
+    "black",
+    "types-requests",
+    "isort",
+    "coverage",
+    "pytest-cov",
+    "pytest-ordering",
+    "pytest-asyncio",
+    "aioresponses",
+    "pytest<8",
+    "pylint-pydantic",
+    "bumpversion",
+    "pyright",
+    "pytest-aioresponses",
+    "pylint",
+    "ruff",
+    "alembic>=1.14.0,<2",
+    "sqlacodegen==3.0.0rc5",
+    "ipython>=8.0.0,<9",
+    "datamodel-code-generator>=0.26.5,<0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 120
+skip_gitignore = true
+[tool.pytest]
+testpaths = "tests/"
+
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# [tool.uv.sources]
+# antgent = { path = "../../oss/antgent", editable = true }
+
+
+[tool.logfire]
+ignore_no_config=true
