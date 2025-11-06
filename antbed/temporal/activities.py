@@ -241,11 +241,15 @@ def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
         if "machine" in variants_to_generate:
             machine_result = result.summaries.get(SummaryType.MACHINE)
             if machine_result:
-                summaries.append(add_summary_output(vf=vf, output=machine_result.summary, variant="machine", session=session))
+                summaries.append(
+                    add_summary_output(vf=vf, output=machine_result.summary, variant="machine", session=session)
+                )
         if "pretty" in variants_to_generate:
             pretty_result = result.summaries.get(SummaryType.PRETTY)
             if pretty_result:
-                summaries.append(add_summary_output(vf=vf, output=pretty_result.summary, variant="pretty", session=session))
+                summaries.append(
+                    add_summary_output(vf=vf, output=pretty_result.summary, variant="pretty", session=session)
+                )
 
         # Include existing summary IDs as well
         data.summary_ids.extend([s.id for s in summaries])
