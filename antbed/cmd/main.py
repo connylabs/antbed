@@ -2,40 +2,39 @@
 import typer
 from ant31box.cmd.typer.default_config import app as default_config_app
 from ant31box.cmd.typer.version import app as version_app
-from temporalloop.cmd.looper import main as looper_main
-from temporalloop.cmd.scheduler import scheduler
 
 from antbed.config import config
+
 from antbed.init import init
 from antbed.version import VERSION
 
 from .server import app as server_app
+from .worker import app as looper_app
 from .tiktoken import tikcount
 
 app = typer.Typer(no_args_is_help=True)
 
-looper_cmd = typer.Typer(
-    name="looper",
-    help="Starts the temporal worker.",
-    context_settings={
-        "auto_envvar_prefix": "TEMPORALRUNNER",
-        "allow_extra_args": True,
-        "ignore_unknown_options": True,
-    },
-)
+# looper_cmd = typer.Typer(
+#     name="looper",
+#     help="Starts the temporal worker.",
+#     context_settings={
+#         "auto_envvar_prefix": "TEMPORALRUNNER",
+#         "allow_extra_args": True,
+#         "ignore_unknown_options": True,
+#     },
+# )
 
 
-@looper_cmd.callback(invoke_without_command=True)
-def looper_wrapper(ctx: typer.Context):
-    """Wrapper to initialize before starting the looper."""
-    _config = config()
-    init(_config.conf, mode="worker")
-    looper_main(ctx, config=None)
+# @looper_cmd.callback(invoke_without_command=True)
+# def looper_wrapper(ctx: typer.Context):
+#     """Wrapper to initialize before starting the looper."""
+#     _config = config()
+#     init(_config.conf, mode="worker")
+#     looper_main(ctx, config=None)
 
 
 # Register all sub-commands at module level
-app.add_typer(looper_cmd)
-app.command(name="scheduler", help="Starts the temporal scheduler.")(scheduler)
+app.add_typer(looper_app)
 app.add_typer(server_app)
 app.add_typer(version_app)
 app.add_typer(default_config_app)
