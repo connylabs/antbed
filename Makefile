@@ -52,7 +52,8 @@ create-cache-db:
 
 prep-db: clear-test-db create-cache-db
 	-@docker kill $(DATABASE_NAME)-pg
-	@docker run --rm --name $(DATABASE_NAME)-pg -v $(DATABASE_DATA):/var/lib/postgresql/data -d -p $(DATABASE_PORT):5432 -e POSTGRES_USER=$(DATABASE_USER) -e POSTGRES_PASSWORD=$(DATABASE_PASSWORD) -e POSTGRES_DB=$(DATABASE_NAME) postgres
+	echo @database_url=$(DATABASE_URL)
+	@docker run --rm --name $(DATABASE_NAME)-pg -v $(DATABASE_DATA):/var/lib/postgresql/data -d -p $(DATABASE_PORT):5432 -e POSTGRES_USER=$(DATABASE_USER) -e POSTGRES_PASSWORD=$(DATABASE_PASSWORD) -e POSTGRES_DB=$(DATABASE_NAME) postgres:15
 	until docker exec $(DATABASE_NAME)-pg /usr/bin/pg_isready -d $(DATABASE_NAME) -h $(DATABASE_HOST) -p 5432 -U $(DATABASE_USER) -q; do sleep 1 ; done
 	$(MAKE) --no-print-directory DATABASE_URL=$(DATABASE_URL) migrate
 
