@@ -195,7 +195,7 @@ def add_summary_output(vf: VFile, output: "SummaryInput", variant: str, session:
 @activity.defn
 def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
     # Import antgent modules inside activity to avoid Temporal sandbox restrictions
-    from antgent.agents.summarizer.models import SummaryInput
+    from antgent.agents.summarizer.models import SummaryInput, SummaryType
     from antgent.models.agent import AgentInput
     from antgent.workflows.base import WorkflowInput
     from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
@@ -238,10 +238,14 @@ def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
 
         summaries = []
         result = summaryoutput.result
-        if "machine" in variants_to_generate and result.machine:
-            summaries.append(add_summary_output(vf=vf, output=result.machine, variant="machine", session=session))
-        if "pretty" in variants_to_generate and result.pretty:
-            summaries.append(add_summary_output(vf=vf, output=result.pretty, variant="pretty", session=session))
+        if "machine" in variants_to_generate:
+            machine_result = result.summaries.get(SummaryType.MACHINE)
+            if machine_result:
+                summaries.append(add_summary_output(vf=vf, output=machine_result.summary, variant="machine", session=session))
+        if "pretty" in variants_to_generate:
+            pretty_result = result.summaries.get(SummaryType.PRETTY)
+            if pretty_result:
+                summaries.append(add_summary_output(vf=vf, output=pretty_result.summary, variant="pretty", session=session))
 
         # Include existing summary IDs as well
         data.summary_ids.extend([s.id for s in summaries])
