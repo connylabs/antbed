@@ -85,6 +85,14 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                 queue="antbed-queue-activity",
                 activities=[
                     "antbed.temporal.activities:echo",
+                    "antbed.temporal.activities:aecho",
+                    "antbed.temporal.activities:get_vfile_id",
+                    "antbed.temporal.activities:get_or_create_file",
+                    "antbed.temporal.activities:get_or_create_split",
+                    "antbed.temporal.activities:embedding",
+                    "antbed.temporal.activities:add_vfile_to_collection",
+                    "antbed.temporal.activities:add_vfile_to_vector",
+                    "antbed.temporal.activities:summarize",
                     "antgent.workflows.summarizer:run_summarizer_one_type_activity",
                 ],
                 workflows=[],
@@ -95,6 +103,8 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                 activities=[],
                 workflows=[
                     "antbed.temporal.workflows.echo:EchoWorkflow",
+                    "antbed.temporal.workflows.upload:UploadWorkflow",
+                    "antbed.temporal.workflows.embedding:EmbeddingWorkflow",
                     "antgent.workflows.summarizer:TextSummarizerOneTypeWorkflow",
                     "antgent.workflows.summarizer:TextSummarizerAllWorkflow",
                 ],
