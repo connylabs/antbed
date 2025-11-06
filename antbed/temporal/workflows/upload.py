@@ -7,7 +7,11 @@ from temporalloop.utils import as_completed_with_concurrency
 
 with workflow.unsafe.imports_passed_through():
     from antbed.models import EmbeddingRequest, UploadRequest, UploadRequestIDs
-    from antbed.temporal.activities import add_vfile_to_collection, get_or_create_file, summarize
+    from antbed.temporal.activities import add_vfile_to_collection, get_or_create_file, save_summaries_to_db
+    from antgent.agents.summarizer.models import SummaryInput
+    from antgent.models.agent import AgentInput
+    from antgent.workflows.base import WorkflowInput
+    from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
 
 MAX_CONCURRENT = 10
 
@@ -43,15 +47,51 @@ class UploadWorkflow:
                 )
             )
 
+        # 5. Run summarization as a child workflow if requested
+        summary_result = None
         if upload.summarize:
-            # 5. Summarize the content
+            workflow.logger.info("Starting summarization child workflow")
+            # Get the VFile content for summarization
+            vfile_activity = await workflow.start_activity(
+                "antbed.temporal.activities:get_vfile_id",
+                args=[upload.doc.subject_id, upload.doc.subject_type],
+                start_to_close_timeout=timedelta(seconds=30),
+            )
+            # Prepare workflow input
+            from antbed.store import antbeddb
+            # We can't call DB directly in workflow, but we have vfile_id from earlier
+            # So we'll pass the content from the upload request
+            content = "\n".join(upload.doc.pages)
+            context = SummaryInput(content=content)
+            agent_input = AgentInput(context=context)
+            workflow_input = WorkflowInput(agent_input=agent_input)
+
+            # Execute as child workflow
+            try:
+                summary_output = await workflow.execute_child_workflow(
+                    TextSummarizerAllWorkflow.run,
+                    workflow_input,
+                    id=f"summarizer-{self.urir.vfile_id}",
+                    task_queue="antbed-queue",
+                    retry_policy=RetryPolicy(maximum_attempts=3),
+                )
+                # Convert to serializable dict for activity
+                if summary_output and summary_output.result:
+                    summary_result = summary_output.model_dump(mode="json")
+                workflow.logger.info("Summarization child workflow completed")
+            except Exception as e:
+                workflow.logger.error(f"Summarization child workflow failed: {e}")
+                # Continue workflow even if summarization fails
+                summary_result = None
+
+        # 6. Save summary results to database via activity
+        if summary_result is not None:
             activities.append(
                 workflow.start_activity(
-                    summarize,
-                    self.urir,
-                    start_to_close_timeout=timedelta(minutes=120),
-                    schedule_to_close_timeout=timedelta(hours=24),
-                    retry_policy=RetryPolicy(maximum_attempts=3),
+                    save_summaries_to_db,
+                    args=[self.urir, summary_result],
+                    start_to_close_timeout=timedelta(minutes=5),
+                    schedule_to_close_timeout=timedelta(minutes=10),
                 )
             )
 

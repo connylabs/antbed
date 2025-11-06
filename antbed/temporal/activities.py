@@ -182,77 +182,62 @@ def add_vfile_to_vector(data: UploadRequestIDs) -> UploadRequestIDs:
         return data
 
 
-def add_summary_output(vf: VFile, output: "SummaryInput", variant: str, session: Any = None) -> Summary:
-    db = antbeddb()
-    summary = db.add_summary_output(vf.id, output=output, variant_name=variant, session=session)
-
-    activity.logger.info(
-        f"Summarized ( {summary.variant_name}) from {vf.tokens} to {summary.tokens} tokens for VFile {vf.id}"
-    )
-    return summary
-
-
 @activity.defn
-def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
-    # Import antgent modules inside activity to avoid Temporal sandbox restrictions
-    from antgent.agents.summarizer.models import SummaryInput, SummaryType
-    from antgent.models.agent import AgentInput
-    from antgent.workflows.base import WorkflowInput
-    from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
+def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any]) -> UploadRequestIDs:
+    """Activity to save summary results to the database (pure I/O operation)."""
+    from antgent.agents.summarizer.models import SummaryType
 
     activity.heartbeat()
-    activity.logger.info("Summarize multi (pretty/machine)")
+    activity.logger.info("Saving summaries to database")
     db = antbeddb()
+
     with db.new_session() as session:
         if data.vfile_id is None:
             raise ValueError("VFile ID is required")
         vf = db.find_vfile(data.vfile_id, session=session)
 
-        existing_variant = {s.variant_name for s in vf.summaries}
-        variants_to_generate = {"machine", "pretty"} - existing_variant
-        if not variants_to_generate:
-            activity.logger.info("All summaries already exist for VFile %s", vf.id)
-            data.summary_ids = [s.id for s in vf.summaries]
-            return data
+        # Get existing summary variants
+        existing_variants = {s.variant_name for s in vf.summaries}
+        activity.logger.info(f"Existing summary variants: {existing_variants}")
 
-        activity.heartbeat()
-        context = SummaryInput(content=vf.content(summary=False))
-        agent_input = AgentInput(context=context)
-        workflow_input = WorkflowInput(agent_input=agent_input)
-
-        async def run_summarizer():
-            client = await tclient()
-            workflow_id = f"summarizer-{data.vfile_id}-{uuid.uuid4().hex[:8]}"
-            return await client.execute_workflow(
-                TextSummarizerAllWorkflow.run,
-                workflow_input,
-                id=workflow_id,
-                task_queue="antbed-queue",
-                id_reuse_policy=WorkflowIDReusePolicy.ALLOW_DUPLICATE,
-            )
-
-        summaryoutput = asyncio.run(run_summarizer())
-
-        if summaryoutput is None or summaryoutput.result is None:
-            raise ValueError("Summary failed or returned empty result")
+        # Parse the summary result
+        summaries_dict = summary_result.get("summaries", {})
 
         summaries = []
-        result = summaryoutput.result
-        if "machine" in variants_to_generate:
-            machine_result = result.summaries.get(SummaryType.MACHINE)
-            if machine_result:
-                summaries.append(
-                    add_summary_output(vf=vf, output=machine_result.summary, variant="machine", session=session)
-                )
-        if "pretty" in variants_to_generate:
-            pretty_result = result.summaries.get(SummaryType.PRETTY)
-            if pretty_result:
-                summaries.append(
-                    add_summary_output(vf=vf, output=pretty_result.summary, variant="pretty", session=session)
-                )
+        for variant_str, summary_data in summaries_dict.items():
+            variant = variant_str  # Already a string like "machine" or "pretty"
+            if variant in existing_variants:
+                activity.logger.info(f"Summary variant '{variant}' already exists, skipping")
+                continue
 
-        # Include existing summary IDs as well
+            if summary_data is not None:
+                # Extract the actual summary from the InternalSummaryResult structure
+                actual_summary = summary_data.get("summary", {})
+                if actual_summary:
+                    summary_output_dict = {
+                        "short_version": actual_summary.get("short_version", ""),
+                        "description": actual_summary.get("description", ""),
+                        "title": actual_summary.get("title", ""),
+                        "tags": actual_summary.get("tags", []),
+                        "language": actual_summary.get("language", ""),
+                    }
+
+                    # Create a simple object with the required attributes
+                    class SummaryOutput:
+                        def __init__(self, **kwargs):
+                            for key, value in kwargs.items():
+                                setattr(self, key, value)
+
+                    summary_output = SummaryOutput(**summary_output_dict)
+                    summary = db.add_summary_output(vf.id, output=summary_output, variant_name=variant, session=session)
+                    activity.logger.info(
+                        f"Saved summary variant '{variant}': {vf.tokens} -> {summary.tokens} tokens for VFile {vf.id}"
+                    )
+                    summaries.append(summary)
+
+        # Include both new and existing summary IDs
         data.summary_ids.extend([s.id for s in summaries])
+        data.summary_ids.extend([s.id for s in vf.summaries if s.id not in data.summary_ids])
 
         activity.heartbeat()
         return data
