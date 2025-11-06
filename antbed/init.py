@@ -11,7 +11,6 @@ def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] 
         if not extra:
             extra = {}
         logfire.configure(token=config.token, environment=extra.get("env", "dev"))
-        logfire.instrument_openai_agents()
         if mode == "server" and extra is not None and extra.get("app"):
             app = extra["app"]
             logfire.instrument_fastapi(
