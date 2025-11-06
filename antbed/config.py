@@ -8,7 +8,7 @@ from activealchemy.config import PostgreSQLConfigSchema
 from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, LoggingConfigSchema
 from ant31box.config import Config as Ant31BoxConfig
 from antgent.aliases import AliasResolver
-from antgent.config import AliasesSchema, AntgentConfig, LLMsConfigSchema
+from antgent.config import AliasesSchema, AntgentConfig, LLMsConfigSchema, TracesConfigSchema
 from antgent.config import ConfigSchema as AntgentConfigSchema
 from antgent.models.agent import AgentConfig, ModelProvidersConfig, ProviderMapping, ProviderSettings
 from pydantic import Field, RootModel
@@ -153,7 +153,7 @@ class ConfigSchema(AntgentConfigSchema):
     agents: AgentsCustomConfigSchema = Field(
         default_factory=lambda: AgentsCustomConfigSchema(root=DEFAULT_AGENTS_CONFIG)
     )
-
+    traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
     aliases: AliasesSchema = Field(default_factory=lambda: AliasesSchema(root=AliasResolver(DEFAULT_ALIASES)))
 
 

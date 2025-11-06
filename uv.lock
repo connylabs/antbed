@@ -447,8 +447,8 @@ dev = [
 
 [[package]]
 name = "antgent"
-version = "0.12.3"
-source = { git = "https://github.com/ant31/antgent?rev=main#5139f129729b2e5930a48ec96396fb1624bd5390" }
+version = "0.12.4"
+source = { git = "https://github.com/ant31/antgent?rev=main#d68a4940d92eb58c39e32258c34b8dc2055d2026" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiohttp-prometheus-exporter" },
