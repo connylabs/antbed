@@ -1,0 +1,14 @@
+{
+  "doc": {
+    "subject_id": "my-doc-curl-123",
+    "subject_type": "external_curl",
+    "source_filename": "my_document_from_curl.txt",
+    "pages": [
+      "This is the first page of my document sent via curl.",
+      "This is the second page, containing more important information."
+    ]
+  },
+  "collection_name": "my_curl_collection",
+  "summarize": true,
+  "manager": "qdrant"
+}
