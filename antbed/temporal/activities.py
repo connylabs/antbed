@@ -183,7 +183,6 @@ def add_vfile_to_vector(data: UploadRequestIDs) -> UploadRequestIDs:
 
 
 def add_summary_output(vf: VFile, output: "SummaryInput", variant: str, session: Any = None) -> Summary:
-    from antgent.agents.summarizer.models import SummaryInput
 
     db = antbeddb()
     summary = db.add_summary_output(vf.id, output=output, variant_name=variant, session=session)
