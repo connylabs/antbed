@@ -3,15 +3,14 @@ import asyncio
 import logging
 import time
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from antgent.agents.summarizer.models import SummaryInput
-from antgent.models.agent import AgentInput
-from antgent.workflows.base import WorkflowInput
-from antgent.workflows.summarizer import TextSummarizerAllWorkflow
 from pydantic import BaseModel, ConfigDict
 from temporalio import activity
 from temporalio.common import WorkflowIDReusePolicy
+
+if TYPE_CHECKING:
+    from antgent.agents.summarizer.models import SummaryInput
 
 # from antbed.agents.rag_summary import SummaryAgent, SummaryInput
 from antbed.db.models import Collection, Embedding, Summary, Vector, VFile
@@ -183,7 +182,9 @@ def add_vfile_to_vector(data: UploadRequestIDs) -> UploadRequestIDs:
         return data
 
 
-def add_summary_output(vf: VFile, output: SummaryInput, variant: str, session: Any = None) -> Summary:
+def add_summary_output(vf: VFile, output: "SummaryInput", variant: str, session: Any = None) -> Summary:
+    from antgent.agents.summarizer.models import SummaryInput
+
     db = antbeddb()
     summary = db.add_summary_output(vf.id, output=output, variant_name=variant, session=session)
 
@@ -195,6 +196,12 @@ def add_summary_output(vf: VFile, output: SummaryInput, variant: str, session: A
 
 @activity.defn
 def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
+    # Import antgent modules inside activity to avoid Temporal sandbox restrictions
+    from antgent.agents.summarizer.models import SummaryInput
+    from antgent.models.agent import AgentInput
+    from antgent.workflows.base import WorkflowInput
+    from antgent.workflows.summarizer import TextSummarizerAllWorkflow
+
     activity.heartbeat()
     activity.logger.info("Summarize multi (pretty/machine)")
     db = antbeddb()
