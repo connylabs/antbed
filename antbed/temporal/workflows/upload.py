@@ -6,12 +6,13 @@ from temporalio.exceptions import ActivityError
 from temporalloop.utils import as_completed_with_concurrency
 
 with workflow.unsafe.imports_passed_through():
-    from antbed.models import EmbeddingRequest, UploadRequest, UploadRequestIDs
-    from antbed.temporal.activities import add_vfile_to_collection, get_or_create_file, save_summaries_to_db
     from antgent.agents.summarizer.models import SummaryInput
     from antgent.models.agent import AgentInput
     from antgent.workflows.base import WorkflowInput
     from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
+
+    from antbed.models import EmbeddingRequest, UploadRequest, UploadRequestIDs
+    from antbed.temporal.activities import add_vfile_to_collection, get_or_create_file, save_summaries_to_db
 
 MAX_CONCURRENT = 10
 
@@ -58,7 +59,6 @@ class UploadWorkflow:
                 start_to_close_timeout=timedelta(seconds=30),
             )
             # Prepare workflow input
-            from antbed.store import antbeddb
             # We can't call DB directly in workflow, but we have vfile_id from earlier
             # So we'll pass the content from the upload request
             content = "\n".join(upload.doc.pages)

@@ -1,24 +1,20 @@
 # pylint: disable=import-outside-toplevel
-import asyncio
 import logging
 import time
-import uuid
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict
 from temporalio import activity
-from temporalio.common import WorkflowIDReusePolicy
 
 if TYPE_CHECKING:
-    from antgent.agents.summarizer.models import SummaryInput
+    pass
 
 # from antbed.agents.rag_summary import SummaryAgent, SummaryInput
-from antbed.db.models import Collection, Embedding, Summary, Vector, VFile
+from antbed.db.models import Collection, Embedding, Vector, VFile
 from antbed.embedding import VFileEmbedding
 from antbed.models import EmbeddingRequest, UploadRequest, UploadRequestIDs
 from antbed.splitdoc import Splitter
 from antbed.store import antbeddb
-from antbed.temporal.client import tclient
 from antbed.vectordb.manager import VectorManager
 
 logger = logging.getLogger(__name__)
@@ -185,7 +181,6 @@ def add_vfile_to_vector(data: UploadRequestIDs) -> UploadRequestIDs:
 @activity.defn
 def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any]) -> UploadRequestIDs:
     """Activity to save summary results to the database (pure I/O operation)."""
-    from antgent.agents.summarizer.models import SummaryType
 
     activity.heartbeat()
     activity.logger.info("Saving summaries to database")
