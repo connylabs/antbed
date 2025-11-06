@@ -99,8 +99,6 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     "antbed.temporal.workflows.echo:EchoWorkflow",
                     "antbed.temporal.workflows.upload:UploadWorkflow",
                     "antbed.temporal.workflows.embedding:EmbeddingWorkflow",
-                    "antgent.workflows.summarizer:TextSummarizerOneTypeWorkflow",
-                    "antgent.workflows.summarizer:TextSummarizerAllWorkflow",
                 ],
             ),
         ],

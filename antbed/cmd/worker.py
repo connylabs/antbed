@@ -101,32 +101,8 @@ def looper_wrapper(  # pylint: disable=too-many-arguments
     ] = True,
 ):
     """Wrapper to initialize before starting the looper."""
-    from temporalio.worker import SandboxedWorkflowRunner
-    from temporalio.worker.workflow_sandbox import SandboxRestrictions
-    
     _config = config(str(config_path) if config_path else None)
     init(_config.conf, mode="worker")
-
-    # Configure passthrough modules for Temporal sandbox to avoid restrictions
-    # on non-deterministic imports used only in activities
-    passthrough = [
-        "antgent",
-        "litellm",
-        "httpx",
-        "urllib",
-        "urllib.request", 
-        "http",
-        "http.client",
-    ]
-    
-    # Create custom workflow runner with passthrough modules
-    custom_runner = SandboxedWorkflowRunner(
-        restrictions=SandboxRestrictions.passthrough_modules(*passthrough)
-    )
-    
-    # Store in context for temporalloop to use
-    ctx.obj = ctx.obj or {}
-    ctx.obj["workflow_runner"] = custom_runner
 
     # Call the original looper main function with all arguments from the context
     looper_cmd.main(
