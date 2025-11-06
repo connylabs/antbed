@@ -52,15 +52,8 @@ class UploadWorkflow:
         summary_result = None
         if upload.summarize:
             workflow.logger.info("Starting summarization child workflow")
-            # Get the VFile content for summarization
-            vfile_activity = await workflow.start_activity(
-                "antbed.temporal.activities:get_vfile_id",
-                args=[upload.doc.subject_id, upload.doc.subject_type],
-                start_to_close_timeout=timedelta(seconds=30),
-            )
-            # Prepare workflow input
-            # We can't call DB directly in workflow, but we have vfile_id from earlier
-            # So we'll pass the content from the upload request
+            # Prepare workflow input using content from the upload request
+            # (vfile_id is already in self.urir from get_or_create_file activity)
             content = "\n".join(upload.doc.pages)
             context = SummaryInput(content=content)
             agent_input = AgentInput(context=context)
