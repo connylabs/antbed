@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from temporalio import workflow
+from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 from temporalloop.utils import as_completed_with_concurrency
 
@@ -50,6 +51,7 @@ class UploadWorkflow:
                     self.urir,
                     start_to_close_timeout=timedelta(minutes=120),
                     schedule_to_close_timeout=timedelta(hours=24),
+                    retry_policy=RetryPolicy(maximum_attempts=3),
                 )
             )
 
