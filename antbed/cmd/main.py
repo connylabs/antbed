@@ -4,13 +4,11 @@ from ant31box.cmd.typer.default_config import app as default_config_app
 from ant31box.cmd.typer.version import app as version_app
 
 from antbed.config import config
-
-from antbed.init import init
 from antbed.version import VERSION
 
 from .server import app as server_app
-from .worker import app as looper_app
 from .tiktoken import tikcount
+from .worker import app as looper_app
 
 app = typer.Typer(no_args_is_help=True)
 
