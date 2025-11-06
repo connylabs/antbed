@@ -81,8 +81,8 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
     workers: list[WorkerConfigSchema] = Field(
         default=[
             WorkerConfigSchema(
-                name="antbed-activities",
-                queue="antbed-queue-activity",
+                name="antbed-worker",
+                queue="antbed-queue",
                 activities=[
                     "antbed.temporal.activities:echo",
                     "antbed.temporal.activities:aecho",
@@ -95,12 +95,6 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     "antbed.temporal.activities:summarize",
                     "antgent.workflows.summarizer:run_summarizer_one_type_activity",
                 ],
-                workflows=[],
-            ),
-            WorkerConfigSchema(
-                name="antbed-workflow",
-                queue="antbed-queue",
-                activities=[],
                 workflows=[
                     "antbed.temporal.workflows.echo:EchoWorkflow",
                     "antbed.temporal.workflows.upload:UploadWorkflow",
