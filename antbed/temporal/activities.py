@@ -199,7 +199,7 @@ def summarize(data: UploadRequestIDs) -> UploadRequestIDs:
     from antgent.agents.summarizer.models import SummaryInput
     from antgent.models.agent import AgentInput
     from antgent.workflows.base import WorkflowInput
-    from antgent.workflows.summarizer import TextSummarizerAllWorkflow
+    from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
 
     activity.heartbeat()
     activity.logger.info("Summarize multi (pretty/machine)")
