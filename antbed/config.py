@@ -6,8 +6,12 @@ from typing import Any
 import ant31box.config
 from activealchemy.config import PostgreSQLConfigSchema
 from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, LoggingConfigSchema
-from antgent.config import AgentsConfigSchema, AliasesSchema, LLMsConfigSchema
-from pydantic import Field
+from ant31box.config import Config as Ant31BoxConfig
+from antgent.aliases import AliasResolver
+from antgent.config import AliasesSchema, AntgentConfig, LLMsConfigSchema
+from antgent.config import ConfigSchema as AntgentConfigSchema
+from antgent.models.agent import AgentConfig, ModelProvidersConfig, ProviderMapping, ProviderSettings
+from pydantic import Field, RootModel
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config import TemporalSettings as TemporalConfigSchema
 from temporalloop.config import WorkerSettings as WorkerConfigSchema
@@ -19,16 +23,34 @@ LOGGING_CONFIG["loggers"].update({"antbed": {"handlers": ["default"], "level": "
 logger: logging.Logger = logging.getLogger("antbed")
 
 
+DEFAULT_ALIASES = {
+    "strong": "gemini/gemini-pro",
+    "weak": "gemini/gemini-flash",
+}
+
+DEFAULT_MODEL_PROVIDERS = ModelProvidersConfig(
+    default=ProviderSettings(client="litellm", api_mode="chat"),
+    mappings=[
+        ProviderMapping(prefix="gemini", client="litellm", api_mode="chat"),
+        ProviderMapping(prefix="gpt-", client="openai", api_mode="response"),
+        ProviderMapping(prefix="openai/", client="openai", api_mode="response"),
+    ],
+)
+
+
+DEFAULT_AGENTS_CONFIG: dict[str, AgentConfig] = {}
+
+
+class AgentsCustomConfigSchema(RootModel[dict[str, AgentConfig]]):
+    pass
+
+
 class LoggingCustomConfigSchema(LoggingConfigSchema):
     log_config: dict[str, Any] | str | None = Field(default_factory=lambda: LOGGING_CONFIG)
 
 
 class FastAPIConfigCustomSchema(FastAPIConfigSchema):
     server: str = Field(default="antbed.server.server:serve")
-
-
-class LogfireConfigSchema(BaseConfig):
-    token: str = Field(default="")
 
 
 class QdrantConfigSchema(BaseConfig):
@@ -111,7 +133,7 @@ ENVPREFIX = "ANTBED"
 
 
 # Main configuration schema
-class ConfigSchema(ant31box.config.ConfigSchema):
+class ConfigSchema(AntgentConfigSchema):
     model_config = SettingsConfigDict(
         env_prefix=f"{ENVPREFIX}_",
         env_nested_delimiter="__",
@@ -126,13 +148,16 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     server: FastAPIConfigSchema = Field(default_factory=FastAPIConfigCustomSchema)
     temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema)
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict)
-    logfire: LogfireConfigSchema = Field(default_factory=LogfireConfigSchema)
     llms: LLMsConfigSchema = Field(default_factory=LLMsConfigSchema)
-    agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
-    aliases: AliasesSchema = Field(default_factory=AliasesSchema)
+    model_providers: ModelProvidersConfig = Field(default_factory=lambda: DEFAULT_MODEL_PROVIDERS)
+    agents: AgentsCustomConfigSchema = Field(
+        default_factory=lambda: AgentsCustomConfigSchema(root=DEFAULT_AGENTS_CONFIG)
+    )
+
+    aliases: AliasesSchema = Field(default_factory=lambda: AliasesSchema(root=AliasResolver(DEFAULT_ALIASES)))
 
 
-class Config(ant31box.config.Config[ConfigSchema]):
+class Config(AntgentConfig[ConfigSchema], Ant31BoxConfig[ConfigSchema]):
     _env_prefix = ENVPREFIX
     __config_class__: type[ConfigSchema] = ConfigSchema
 
@@ -149,28 +174,12 @@ class Config(ant31box.config.Config[ConfigSchema]):
         return self.conf.qdrant
 
     @property
-    def logfire(self) -> LogfireConfigSchema:
-        return self.conf.logfire
-
-    @property
-    def temporalio(self) -> TemporalCustomConfigSchema:
-        return self.conf.temporalio
-
-    @property
-    def schedules(self) -> dict[str, TemporalScheduleSchema]:
-        return self.conf.schedules
-
-    @property
     def llms(self) -> LLMsConfigSchema:
         return self.conf.llms
 
     @property
-    def agents(self) -> AgentsConfigSchema:
-        return self.conf.agents
-
-    @property
-    def aliases(self) -> AliasesSchema:
-        return self.conf.aliases
+    def agents(self) -> dict[str, AgentConfig]:
+        return self.conf.agents.root
 
 
 def config(path: str | None = None, reload: bool = False) -> Config:

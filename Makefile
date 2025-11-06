@@ -3,7 +3,7 @@
 APP_ENV ?= dev
 VERSION := `cat VERSION`
 package := antbed
-NAMESPACE := antbed
+NAMESPACE := antbed-dev
 MIGRATE_BINARY = goose
 GOTOOLS =
 GOTOOLS += $(MIGRATE_BINARY)
@@ -177,19 +177,19 @@ rename:
 	ack ANTBED -i -l | xargs -i{} sed -r -i "s/ANTBED/ANTBED/g" {}
 
 run-worker:
-	uv run bin/antbed  looper --namespace default  --host 127.0.0.1:7233 --config=localconfig.yaml
+	uv run bin/antbed  looper --namespace $(NAMESPACE)  --host 127.0.0.1:7233 --config=localconfig.yaml
 
 run-server:
 	./bin/antbed server --config localconfig.yaml
 
 temporal-init-namespace:
-	temporal operator namespace  create -n antbed-dev-al --retention 72h0m0s --email devops@conny.legal --description "antbed stg namespace"
+	temporal operator namespace  create -n $(NAMESPACE) --retention 72h0m0s --email devops@conny.legal --description "antbed stg namespace"
 
 ipython:
 	uv run ipython
 
 temporal-schedule:
-	uv run bin/antbed scheduler --namespace default  --host 127.0.0.1:7233  --config=localconfig.yaml -s scheduly.yaml
+	uv run bin/antbed scheduler --namespace $(NAMESPACE)  --host 127.0.0.1:7233  --config=localconfig.yaml -s scheduly.yaml
 
 
 docker-push-local: docker-build

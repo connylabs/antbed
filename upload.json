@@ -11,4 +11,5 @@
   "collection_name": "my_curl_collection",
   "summarize": true,
   "manager": "qdrant"
+  "skip_embedding": true,
 }
