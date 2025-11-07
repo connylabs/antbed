@@ -122,12 +122,14 @@ def embedding(data: EmbeddingRequest) -> EmbeddingRequest:
 
 @activity.defn
 def vfile_has_summaries(vfile_id: uuid.UUID) -> bool:
-    """Check if a VFile has any summaries."""
+    """Check if a VFile has all expected summary variants."""
     activity.heartbeat()
     db = antbeddb()
+    # TODO: Expected variants should ideally come from configuration
+    expected_variants = {"machine", "pretty"}
     with db.new_session() as session:
-        vfile = db.find_vfile(vfile_id, session=session)
-        return len(vfile.summaries) > 0
+        existing_variants = set(db.get_summary_variants(vfile_id, session=session))
+        return expected_variants.issubset(existing_variants)
 
 
 @activity.defn

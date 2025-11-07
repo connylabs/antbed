@@ -91,6 +91,13 @@ class DB:
 
         return s.save(commit=True, session=session)
 
+    def get_summary_variants(self, vfile_id: uuid.UUID, session=None) -> list[str]:
+        """Get a list of existing summary variants for a VFile."""
+        with self.new_session(session) as sess:
+            # Query for distinct variant names for the given vfile_id
+            result = sess.query(Summary.variant_name).filter(Summary.vfile_id == vfile_id).distinct().all()
+            return [row[0] for row in result]
+
     def delete_vector(self, vector: Vector, session=None) -> None:
         Vector.delete(vector, session=session)
 

@@ -63,7 +63,9 @@ class UploadWorkflow:
                 start_to_close_timeout=timedelta(minutes=5),
             )
             if has_summaries:
-                workflow.logger.info("Summaries already exist and resummarize is false, skipping summarization.")
+                workflow.logger.info(
+                    "All summary variants already exist and resummarize is false, skipping summarization."
+                )
                 should_summarize = False
 
         if should_summarize:
