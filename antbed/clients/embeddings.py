@@ -3,7 +3,8 @@ from functools import cache
 import logfire
 from openai import OpenAI
 
-from antbed.config import Config, EmbeddingProviderConfig, config as confload
+from antbed.config import Config, EmbeddingProviderConfig
+from antbed.config import config as confload
 
 
 class EmbeddingClient:
