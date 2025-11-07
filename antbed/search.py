@@ -7,7 +7,7 @@ import sentry_sdk as sentry
 import sqlalchemy as sa
 from openai import OpenAI
 
-from antbed.clients import openai_client
+from antbed.clients.llm import openai_client
 from antbed.db.models import VFile
 from antbed.models import Content, DocsQuery, SearchRecord, WithContentMode
 from antbed.store import antbeddb

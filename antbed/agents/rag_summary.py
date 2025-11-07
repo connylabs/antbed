@@ -1,7 +1,7 @@
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
-from ..clients import openai_client
+from ..clients.llm import openai_client
 from .agent import Agent, ContextTooLargeError
 
 PROMPT = """

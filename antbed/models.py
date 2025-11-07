@@ -42,8 +42,15 @@ class SplitterType(StrEnum):
 
 
 class EmbeddingModel(StrEnum):
+    # OpenAI models
     OPENAI_LARGE = "text-embedding-3-large"
     OPENAI_SMALL = "text-embedding-3-small"
+    # Cohere models
+    COHERE_EMBED_V3 = "embed-english-v3.0"
+    COHERE_EMBED_MULTILINGUAL_V3 = "embed-multilingual-v3.0"
+    # Voyage AI models
+    VOYAGE_LARGE_2 = "voyage-large-2"
+    VOYAGE_CODE_2 = "voyage-code-2"
 
 
 class ManagerEnum(StrEnum):
@@ -61,8 +68,11 @@ class SplitterConfig(BaseModel):
     splitter_type: SplitterType = Field(
         default=SplitterType.RECURSIVE, title="Splitter Type", description="The type of splitter to use"
     )
-    model: EmbeddingModel = Field(
-        default=EmbeddingModel.OPENAI_LARGE, title="Embedding Model", description="The model to use for embeddings"
+    embedding_provider: str | None = Field(
+        default=None, title="Embedding Provider", description="Embedding provider name (uses default if None)"
+    )
+    model: str = Field(
+        default="text-embedding-3-large", title="Embedding Model", description="The model to use for embeddings"
     )
 
     def overlap(self):
@@ -72,8 +82,9 @@ class SplitterConfig(BaseModel):
         return hashlib.sha256(json.dumps(self.model_dump(), sort_keys=True).encode()).hexdigest()
 
     def name(self) -> str:
+        model_name = self.model.replace("-", "_").replace(".", "_")
         return (
-            f"{self.splitter_type.value}_{self.model.name}_c{self.chunk_size}_o{self.overlap()}_t{self.token_splitter}"
+            f"{self.splitter_type.value}_{model_name}_c{self.chunk_size}_o{self.overlap()}_t{self.token_splitter}"
         ).lower()
 
 

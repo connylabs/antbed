@@ -5,7 +5,7 @@ import tiktoken
 from openai import OpenAI
 from pydantic import BaseModel
 
-from ..clients import openai_client
+from ..clients.llm import openai_client
 
 InputModel = TypeVar("InputModel", bound=BaseModel)
 OutputModel = TypeVar("OutputModel", bound=BaseModel)

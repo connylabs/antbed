@@ -4,7 +4,7 @@ from typing import Any
 import qdrant_client as qc
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
-from antbed.clients import qdrant_client
+from antbed.clients.llm import qdrant_client
 from antbed.db.models import Embedding, Vector, VFile, VFileSplit
 from antbed.vectordb.base import VectorDB
 

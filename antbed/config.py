@@ -11,7 +11,7 @@ from antgent.aliases import AliasResolver
 from antgent.config import AliasesSchema, AntgentConfig, LLMsConfigSchema, TracesConfigSchema
 from antgent.config import ConfigSchema as AntgentConfigSchema
 from antgent.models.agent import AgentConfig, ModelProvidersConfig, ProviderMapping, ProviderSettings
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, field_validator
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config import TemporalSettings as TemporalConfigSchema
 from temporalloop.config import WorkerSettings as WorkerConfigSchema
@@ -95,6 +95,52 @@ class OpenAIConfigSchema(BaseConfig):
         return None
 
 
+class EmbeddingProviderConfig(BaseConfig):
+    """Configuration for a single embedding provider"""
+
+    name: str = Field(..., description="Provider name (e.g., 'openai', 'cohere', 'voyage')")
+    api_key: str | None = Field(default=None, description="API key for this provider")
+    api_key_ref: str | None = Field(default=None, description="Reference to llm provider key (e.g., 'llms.openai')")
+    base_url: str | None = Field(default=None, description="Custom API base URL")
+    organization_id: str | None = Field(default=None, description="Organization ID (OpenAI specific)")
+    project_id: str | None = Field(default=None, description="Project ID (OpenAI specific)")
+    default_model: str = Field(default="text-embedding-3-large", description="Default model for this provider")
+    models: dict[str, str] = Field(default_factory=dict, description="Model aliases (e.g., 'large': 'text-embedding-3-large')")
+
+    @field_validator("api_key_ref", "api_key")
+    @classmethod
+    def check_key_config(cls, v, info):
+        """Ensure either api_key or api_key_ref is provided"""
+        if info.field_name == "api_key" and v is None:
+            values = info.data
+            if values.get("api_key_ref") is None:
+                raise ValueError("Either api_key or api_key_ref must be provided")
+        return v
+
+
+class EmbeddingsConfigSchema(BaseConfig):
+    """Configuration for embedding providers"""
+
+    providers: dict[str, EmbeddingProviderConfig] = Field(
+        default_factory=lambda: {
+            "openai": EmbeddingProviderConfig(
+                name="openai",
+                api_key_ref="llms.openai",
+                default_model="text-embedding-3-large",
+                models={"large": "text-embedding-3-large", "small": "text-embedding-3-small"},
+            )
+        }
+    )
+    default_provider: str = Field(default="openai", description="Default provider to use for embeddings")
+
+    def get_provider(self, name: str | None = None) -> EmbeddingProviderConfig:
+        """Get provider config by name, falls back to default"""
+        provider_name = name or self.default_provider
+        if provider_name not in self.providers:
+            raise ValueError(f"Embedding provider '{provider_name}' not found in config")
+        return self.providers[provider_name]
+
+
 class AntbedConfigSchema(BaseConfig):
     postgresql: PostgreSQLConfigSchema = Field(default_factory=PostgreSQLConfigSchema)
 
@@ -115,7 +161,7 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     "antbed.temporal.activities:add_vfile_to_collection",
                     "antbed.temporal.activities:add_vfile_to_vector",
                     "antbed.temporal.activities:save_summaries_to_db",
-                    "antgent.workflows.summarizer:run_summarizer_one_type_activity",
+                    "antgent.workflows.summarizer.text:run_summarizer_one_type_activity",
                 ],
                 workflows=[
                     "antbed.temporal.workflows.echo:EchoWorkflow",
@@ -156,6 +202,7 @@ class ConfigSchema(AntgentConfigSchema):
     )
     traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
     aliases: AliasesSchema = Field(default_factory=lambda: AliasesSchema(root=AliasResolver(DEFAULT_ALIASES)))
+    embeddings: EmbeddingsConfigSchema = Field(default_factory=EmbeddingsConfigSchema)
 
 
 class Config(AntgentConfig[ConfigSchema], Ant31BoxConfig[ConfigSchema]):
@@ -181,6 +228,10 @@ class Config(AntgentConfig[ConfigSchema], Ant31BoxConfig[ConfigSchema]):
     @property
     def agents(self) -> dict[str, AgentConfig]:
         return self.conf.agents.root
+
+    @property
+    def embeddings(self) -> EmbeddingsConfigSchema:
+        return self.conf.embeddings
 
 
 def config(path: str | None = None, reload: bool = False) -> Config:

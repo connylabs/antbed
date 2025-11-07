@@ -22,6 +22,7 @@ class VectorManager:
         splitter: Splitter | None = None,
         client: qdrant_client.QdrantClient | OpenAI | None = None,
         manager: ManagerEnum = ManagerEnum.NONE,
+        embedding_provider: str | None = None,
     ) -> None:
         if splitter is None:
             self.splitter = Splitter()
@@ -29,7 +30,7 @@ class VectorManager:
             self.splitter = splitter
         self.manager_name: ManagerEnum = manager
         self.manager = self._init_manager(client, manager)
-        self.embedder = VFileEmbedding(self.splitter)
+        self.embedder = VFileEmbedding(self.splitter, provider=embedding_provider)
         self.db = antbeddb()
 
     def _init_manager(self, client: qdrant_client.QdrantClient | OpenAI | None, manager: ManagerEnum) -> VectorDB:

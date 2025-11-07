@@ -7,7 +7,7 @@ from pathlib import Path
 from openai import OpenAI
 from openai.types import VectorStore
 
-from antbed.clients import openai_client
+from antbed.clients.llm import openai_client
 from antbed.db.models import Vector, VFile, VFileSplit, VFileUpload
 from antbed.vectordb.base import VectorDB
 

@@ -1,10 +1,8 @@
 import logging
 import uuid
 
-from openai import OpenAI
 from sqlalchemy.exc import SQLAlchemyError
 
-from antbed.clients import openai_client
 from antbed.db.models import Embedding, VFile, VFileSplit
 from antbed.splitdoc import Splitter
 
@@ -12,17 +10,35 @@ logger = logging.getLogger(__name__)
 
 
 class VFileEmbedding:
-    def __init__(self, splitter: Splitter | None = None, client: OpenAI | None = None) -> None:
+    def __init__(
+        self,
+        splitter: Splitter | None = None,
+        provider: str | None = None,
+        use_litellm: bool = False,
+    ) -> None:
         if not splitter:
             splitter = Splitter()
         self.splitter = splitter
-        if client:
-            self.openai_client = client
-        else:
-            self.openai_client = openai_client()
 
-    def get_openai_embedding(self, text, model="text-embedding-3-large") -> list[float]:
-        return self.openai_client.embeddings.create(input=[text], model=model).data[0].embedding
+        # Use new embedding client factory
+        from antbed.clients.embeddings import embedding_client
+        from antbed.config import config
+
+        self.embedding_client = embedding_client(provider, use_litellm)
+
+        # Get default model from config
+        self.default_model = config().embeddings.get_provider(provider).default_model
+
+    def get_embedding(self, text: str, model: str | None = None) -> list[float]:
+        """Get embedding for a single text"""
+        model = model or self.default_model
+        embeddings = self.embedding_client.embed([text], model)
+        return embeddings[0]
+
+    def get_embeddings_batch(self, texts: list[str], model: str | None = None) -> list[list[float]]:
+        """Get embeddings for multiple texts (more efficient)"""
+        model = model or self.default_model
+        return self.embedding_client.embed(texts, model)
 
     def embedding_vfile(self, vfile: VFile, skip: bool = False, session=None) -> VFileSplit:
         """Skip the embedding process"""
@@ -33,13 +49,15 @@ class VFileEmbedding:
 
     def embedding(self, emb: Embedding, session=None):
         if emb.status in ["new", "skip", "error"]:
-            emb.embedding_vector = self.get_openai_embedding(emb.content, emb.split.model)
+            # Use the split's model if available, otherwise use default
+            model = emb.split.model if emb.split.model else self.default_model
+            emb.embedding_vector = self.get_embedding(emb.content, model)
             emb.status = "complete"
-            logger.info(f"Embedding {emb.id} vect size: {len(emb.embedding_vector)} complete")  # pylint: disable=logging-fstring-interpolation
+            logger.info(f"Embedding {emb.id} vect size: {len(emb.embedding_vector)} complete")
             try:
                 Embedding.add(emb, commit=True, session=session)
             except SQLAlchemyError as e:
-                logger.error(f"Error adding embedding: {e}")  # pylint: disable=logging-fstring-interpolation
+                logger.error(f"Error adding embedding: {e}")
                 raise e
         return emb
 
@@ -76,7 +94,7 @@ class VFileEmbedding:
                     name=self.splitter.config.name().lower(),
                     chunk_size=self.splitter.config.chunk_size,
                     chunk_overlap=self.splitter.config.overlap(),
-                    model=self.splitter.config.model.value.lower(),
+                    model=self.splitter.config.model.lower(),
                     info={"splitter": self.splitter.config.model_dump()},
                     config_hash=self.splitter.config.config_hash(),
                     parts=len(docs),
