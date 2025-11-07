@@ -1,6 +1,7 @@
 # pylint: disable=import-outside-toplevel
 import logging
 import time
+import uuid
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict
@@ -117,6 +118,16 @@ def embedding(data: EmbeddingRequest) -> EmbeddingRequest:
         emb = embedder.embedding(emb, session=session)
         activity.heartbeat()
         return EmbeddingRequest(embedding_id=emb.id, status=emb.status)
+
+
+@activity.defn
+def vfile_has_summaries(vfile_id: uuid.UUID) -> bool:
+    """Check if a VFile has any summaries."""
+    activity.heartbeat()
+    db = antbeddb()
+    with db.new_session() as session:
+        vfile = db.find_vfile(vfile_id, session=session)
+        return len(vfile.summaries) > 0
 
 
 @activity.defn

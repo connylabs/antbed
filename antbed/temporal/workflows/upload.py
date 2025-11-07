@@ -12,7 +12,12 @@ with workflow.unsafe.imports_passed_through():
     from antgent.workflows.summarizer.text import TextSummarizerAllWorkflow
 
     from antbed.models import EmbeddingRequest, UploadRequest, UploadRequestIDs
-    from antbed.temporal.activities import add_vfile_to_collection, get_or_create_file, save_summaries_to_db
+    from antbed.temporal.activities import (
+        add_vfile_to_collection,
+        get_or_create_file,
+        save_summaries_to_db,
+        vfile_has_summaries,
+    )
 
 MAX_CONCURRENT = 10
 
@@ -50,7 +55,18 @@ class UploadWorkflow:
 
         # 5. Run summarization as a child workflow if requested
         summary_result = None
-        if upload.summarize:
+        should_summarize = upload.summarize
+        if should_summarize and not upload.resummarize and self.urir.vfile_id:
+            has_summaries = await workflow.start_activity(
+                vfile_has_summaries,
+                args=[self.urir.vfile_id],
+                start_to_close_timeout=timedelta(minutes=5),
+            )
+            if has_summaries:
+                workflow.logger.info("Summaries already exist and resummarize is false, skipping summarization.")
+                should_summarize = False
+
+        if should_summarize:
             workflow.logger.info("Starting summarization child workflow")
             # Prepare workflow input using content from the upload request
             # (vfile_id is already in self.urir from get_or_create_file activity)

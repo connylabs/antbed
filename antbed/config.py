@@ -161,6 +161,7 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     "antbed.temporal.activities:get_or_create_file",
                     "antbed.temporal.activities:get_or_create_split",
                     "antbed.temporal.activities:embedding",
+                    "antbed.temporal.activities:vfile_has_summaries",
                     "antbed.temporal.activities:add_vfile_to_collection",
                     "antbed.temporal.activities:add_vfile_to_vector",
                     "antbed.temporal.activities:save_summaries_to_db",

@@ -105,6 +105,7 @@ class UploadRequest(BaseModel):
     vector: VectorSchema | None = Field(default=None)
     vector_id: uuid.UUID | None = Field(default=None)
     summarize: bool = Field(default=True)
+    resummarize: bool = Field(default=False)
     translate: str | None = Field(default=None)
     translate_summary: bool = Field(default=False)
 
