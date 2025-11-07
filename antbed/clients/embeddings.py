@@ -24,13 +24,12 @@ def embedding_client(provider: str | None = None, use_litellm: bool = False) -> 
     provider_conf: EmbeddingProviderConfig = config.embeddings.get_provider(provider)
 
     api_key = provider_conf.api_key
-    if not api_key and provider_conf.api_key_ref:
-        if provider_conf.api_key_ref == "llms.openai":
-            # This part is tricky. 'llms.openai' in `antgent` is probably a key in `llms.providers`.
-            # But the existing `openai_client` uses `config().openai`.
-            # And the default value for `api_key_ref` is `llms.openai`.
-            # I will assume it refers to `config().openai` for now.
-            api_key = config.openai.projects[0].api_key
+    if not api_key and provider_conf.api_key_ref == "llms.openai":
+        # This part is tricky. 'llms.openai' in `antgent` is probably a key in `llms.providers`.
+        # But the existing `openai_client` uses `config().openai`.
+        # And the default value for `api_key_ref` is `llms.openai`.
+        # I will assume it refers to `config().openai` for now.
+        api_key = config.openai.projects[0].api_key
 
     # For now, only handle openai provider.
     if provider_conf.name != "openai":

@@ -105,7 +105,10 @@ class EmbeddingProviderConfig(BaseConfig):
     organization_id: str | None = Field(default=None, description="Organization ID (OpenAI specific)")
     project_id: str | None = Field(default=None, description="Project ID (OpenAI specific)")
     default_model: str = Field(default="text-embedding-3-large", description="Default model for this provider")
-    models: dict[str, str] = Field(default_factory=dict, description="Model aliases (e.g., 'large': 'text-embedding-3-large')")
+    models: dict[str, str] = Field(
+        default_factory=dict,
+        description="Model aliases (e.g., 'large': 'text-embedding-3-large')",
+    )
 
     @field_validator("api_key_ref", "api_key")
     @classmethod

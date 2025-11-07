@@ -3,6 +3,8 @@ import uuid
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from antbed.clients.embeddings import embedding_client
+from antbed.config import config
 from antbed.db.models import Embedding, VFile, VFileSplit
 from antbed.splitdoc import Splitter
 
@@ -21,9 +23,6 @@ class VFileEmbedding:
         self.splitter = splitter
 
         # Use new embedding client factory
-        from antbed.clients.embeddings import embedding_client
-        from antbed.config import config
-
         self.embedding_client = embedding_client(provider, use_litellm)
 
         # Get default model from config
