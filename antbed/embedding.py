@@ -4,7 +4,7 @@ import uuid
 from openai import OpenAI
 from sqlalchemy.exc import SQLAlchemyError
 
-from antbed.clients.embeddings import embedding_client
+from antbed.clients import openai_client
 from antbed.db.models import Embedding, VFile, VFileSplit
 from antbed.splitdoc import Splitter
 
@@ -19,7 +19,7 @@ class VFileEmbedding:
         if client:
             self.openai_client = client
         else:
-            self.openai_client = embedding_client()
+            self.openai_client = openai_client()
 
     def get_openai_embedding(self, text, model="text-embedding-3-large") -> list[float]:
         return self.openai_client.embeddings.create(input=[text], model=model).data[0].embedding

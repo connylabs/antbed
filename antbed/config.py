@@ -144,7 +144,6 @@ class ConfigSchema(AntgentConfigSchema):
     antbed: AntbedConfigSchema = Field(default_factory=AntbedConfigSchema)
     name: str = Field(default="antbed")
     openai: OpenAIConfigSchema = Field(default_factory=OpenAIConfigSchema, exclude=True)
-    embeddings: OpenAIConfigSchema = Field(default_factory=OpenAIConfigSchema, exclude=True)
     qdrant: QdrantConfigSchema = Field(default_factory=QdrantConfigSchema)
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema)
     server: FastAPIConfigSchema = Field(default_factory=FastAPIConfigCustomSchema)
@@ -166,10 +165,6 @@ class Config(AntgentConfig[ConfigSchema], Ant31BoxConfig[ConfigSchema]):
     @property
     def openai(self) -> OpenAIConfigSchema:
         return self.conf.openai
-
-    @property
-    def embeddings(self) -> OpenAIConfigSchema:
-        return self.conf.embeddings
 
     @property
     def antbed(self) -> AntbedConfigSchema:
