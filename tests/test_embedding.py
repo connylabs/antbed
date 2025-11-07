@@ -4,13 +4,11 @@ from antbed.db.models import Embedding, VFile, VFileSplit
 from antbed.embedding import VFileEmbedding
 
 
-@patch("antbed.embedding.openai_client")
-def test_vfile_embedding_embedding(mock_openai_client_factory):
-    mock_openai_client = MagicMock()
-    mock_embedding_data = MagicMock()
-    mock_embedding_data.embedding = [0.1, 0.2, 0.3]
-    mock_openai_client.embeddings.create.return_value.data = [mock_embedding_data]
-    mock_openai_client_factory.return_value = mock_openai_client
+@patch("antbed.embedding.embedding_client")
+def test_vfile_embedding_embedding(mock_embedding_client_factory):
+    mock_embedding_client = MagicMock()
+    mock_embedding_client.embed.return_value = [[0.1, 0.2, 0.3]]
+    mock_embedding_client_factory.return_value = mock_embedding_client
 
     vsplit = VFileSplit(model="text-embedding-3-large")
     emb = Embedding(
@@ -28,9 +26,7 @@ def test_vfile_embedding_embedding(mock_openai_client_factory):
 
         assert result_emb.status == "complete"
         assert result_emb.embedding_vector == [0.1, 0.2, 0.3]
-        mock_openai_client.embeddings.create.assert_called_once_with(
-            input=["some text"], model="text-embedding-3-large"
-        )
+        mock_embedding_client.embed.assert_called_once_with(["some text"], "text-embedding-3-large")
         mock_add.assert_called_once()
 
 
