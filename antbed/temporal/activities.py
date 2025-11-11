@@ -248,6 +248,9 @@ def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any])
 
         # Include both new and existing summary IDs
         data.summary_ids.extend([s.id for s in summaries])
+        # After commit, the vf.summaries relationship will be refreshed
+        session.commit()
+        session.refresh(vf)
         data.summary_ids.extend([s.id for s in vf.summaries if s.id not in data.summary_ids])
 
         activity.heartbeat()

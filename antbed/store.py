@@ -89,7 +89,7 @@ class DB:
         s.language = output.language
         s.variant_name = variant_name
 
-        return s.save(commit=True, session=session)
+        return s.save(commit=False, session=session)
 
     def get_summary_variants(self, vfile_id: uuid.UUID, session=None) -> list[str]:
         """Get a list of existing summary variants for a VFile."""
