@@ -208,14 +208,9 @@ def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any])
         existing_variants = {s.variant_name for s in vf.summaries}
         activity.logger.info(f"Existing summary variants: {existing_variants}")
 
-        # Parse the summary result
-        try:
-            summaries_dict = summary_result["result"]["summaries"]
-        except (KeyError, TypeError) as e:
-            activity.logger.error(
-                "Could not find summaries in summary_result. Full result: %s", summary_result, exc_info=True
-            )
-            raise ValueError("Could not find summaries in summary_result") from e
+        # Parse the summary result. Using dict access `[]` ensures this will raise a
+        # KeyError and fail loudly if the expected structure is missing.
+        summaries_dict = summary_result["result"]["summaries"]
 
         summaries = []
         for variant_str, summary_data in summaries_dict.items():
