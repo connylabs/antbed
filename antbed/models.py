@@ -142,6 +142,7 @@ class UploadRequestIDs(BaseModel):
     summary_id: uuid.UUID | None = Field(default=None)
     summary_ids: list[uuid.UUID] = Field(default_factory=list)
     embedding_ids: list[uuid.UUID] = Field(default_factory=list)
+    resummarize: bool = Field(default=False)
 
 
 class EmbeddingWorkflowInput(BaseModel):

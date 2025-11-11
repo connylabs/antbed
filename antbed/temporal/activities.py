@@ -70,6 +70,7 @@ def get_or_create_file(data: UploadRequest) -> UploadRequestIDs:
             collection_name=data.collection_name,
             collection_id=data.collection_id,
             vfile_id=vf.id,
+            resummarize=data.resummarize,
         )
         activity.heartbeat()
         return urir
@@ -100,6 +101,7 @@ def get_or_create_split(data: UploadRequestIDs) -> UploadRequestIDs:
             vfile_split_id=split.id,
             vfile_id=vf.id,
             embedding_ids=[x.id for x in split.embeddings],
+            resummarize=data.resummarize,
         )
     activity.heartbeat()
     return urir
@@ -215,8 +217,8 @@ def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any])
         summaries = []
         for variant_str, summary_data in summaries_dict.items():
             variant = variant_str  # Already a string like "machine" or "pretty"
-            if variant in existing_variants:
-                activity.logger.info(f"Summary variant '{variant}' already exists, skipping")
+            if variant in existing_variants and not data.resummarize:
+                activity.logger.info(f"Summary variant '{variant}' already exists, skipping as resummarize is false.")
                 continue
 
             if summary_data is not None:
