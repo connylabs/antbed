@@ -209,7 +209,13 @@ def save_summaries_to_db(data: UploadRequestIDs, summary_result: dict[str, Any])
         activity.logger.info(f"Existing summary variants: {existing_variants}")
 
         # Parse the summary result
-        summaries_dict = summary_result.get("summaries", {})
+        try:
+            summaries_dict = summary_result["result"]["summaries"]
+        except (KeyError, TypeError) as e:
+            activity.logger.error(
+                "Could not find summaries in summary_result. Full result: %s", summary_result, exc_info=True
+            )
+            raise ValueError("Could not find summaries in summary_result") from e
 
         summaries = []
         for variant_str, summary_data in summaries_dict.items():
